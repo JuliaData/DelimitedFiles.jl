@@ -13,4 +13,4 @@ makedocs(
     strict = Symbol[:doctest],
     )
 
-deploydocs(repo = "github.com/JuliaLang/DelimitedFiles.jl.git")
+deploydocs(repo = "github.com/JuliaData/DelimitedFiles.jl.git")
