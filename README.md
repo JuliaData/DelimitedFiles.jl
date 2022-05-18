@@ -5,7 +5,7 @@
 |  [![][docs-img]][docs-url] | [![][ci-img]][ci-url] [![][codecov-img]][codecov-url] |
 
 [docs-img]: https://img.shields.io/badge/docs-blue.svg
-[docs-url]: https://julialang.github.io/delimitedfiles/dev/
+[docs-url]: http://delimitedfiles.juliadata.org/dev/
 
 [docs-v1-img]: https://img.shields.io/badge/docs-v1-blue.svg
 [docs-v1-url]: https://julialang.github.io/delimitedfiles/v1/
