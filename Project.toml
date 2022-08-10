@@ -1,6 +1,6 @@
 name = "DelimitedFiles"
 uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
-version = "1.0.0"
+version = "1.9.0"
 
 [deps]
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
