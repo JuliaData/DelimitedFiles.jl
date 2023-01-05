@@ -321,14 +321,19 @@ mutable struct DLMStore{T} <: DLMHandler
     eol::Char
 end
 
-function DLMStore(::Type{T}, dims::NTuple{2,Integer},
-                  has_header::Bool, sbuff::String, auto::Bool, eol::AbstractChar) where T
+function DLMStore(::Type{T}, dims::NTuple{2,Int},
+                  has_header::Bool, sbuff::String, auto::Bool, eol::Char) where T
     (nrows,ncols) = dims
     nrows <= 0 && throw(ArgumentError("number of rows in dims must be > 0, got $nrows"))
     ncols <= 0 && throw(ArgumentError("number of columns in dims must be > 0, got $ncols"))
     hdr_offset = has_header ? 1 : 0
     DLMStore{T}(fill(SubString(sbuff,1,0), 1, ncols), Matrix{T}(undef, nrows-hdr_offset, ncols),
-        nrows, ncols, 0, 0, hdr_offset, sbuff, auto, Char(eol))
+        nrows, ncols, 0, 0, hdr_offset, sbuff, auto, eol)
+end
+function DLMStore(::Type{T}, dims::NTuple{2,Integer},
+    has_header::Bool, sbuff::String, auto::Bool, eol::AbstractChar) where T
+    nrows, ncols = dims
+    DLMStore(T, (Int(nrows)::Int, Int(ncols)::Int), has_header, sbuff, auto, Char(eol)::Char)
 end
 
 _chrinstr(sbuff::String, chr::UInt8, startpos::Int, endpos::Int) =
