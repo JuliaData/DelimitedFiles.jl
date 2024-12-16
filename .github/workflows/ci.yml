@@ -61,18 +61,35 @@ jobs:
           files: lcov.info
 
   docs:
-    permissions: write-all
+    name: Documentation
     runs-on: ubuntu-latest
+    permissions:
+      # needed to allow julia-actions/cache to proactively delete old caches that it has created
+      actions: write 
+      contents: write
+      statuses: write
     steps:
-      - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@latest
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
         with:
-          # version: '1.6'
           version: 'nightly'
-      - name: Generate docs
+      - uses: julia-actions/cache@v2
+      - run: julia --color=yes .ci/test_and_change_uuid.jl
+      - name: Configure doc environment
+        shell: julia --project=docs --color=yes {0}
         run: |
-          julia --color=yes -e 'write("Project.toml", replace(read("Project.toml", String), r"uuid = .*?\n" =>"uuid = \"9bb1440f-4735-579b-a4ab-409b98df4dab\"\n"));'
-          julia --project --color=yes -e 'using Pkg; Pkg.activate("docs"); Pkg.instantiate(); Pkg.develop(PackageSpec(path = pwd()))'
-          julia --project=docs --color=yes docs/make.jl pdf
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - uses: julia-actions/julia-buildpkg@v1
+      - name: Run doctests
+        shell: julia --project=docs --color=yes {0}
+        run: |
+          using Documenter: DocMeta, doctest
+          using DelimitedFiles
+          DocMeta.setdocmeta!(DelimitedFiles, :DocTestSetup, :(using DelimitedFiles); recursive=true)
+          doctest(DelimitedFiles)
+      - uses: julia-actions/julia-docdeploy@v1
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
