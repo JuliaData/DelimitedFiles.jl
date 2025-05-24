@@ -827,6 +827,12 @@ Write `A` (a vector, matrix, or an iterable collection of iterable rows) as text
 `delim` (which defaults to tab, but can be any printable Julia object, typically a `Char` or
 `AbstractString`).
 
+Keyword arguments:
+- `quotes::Bool=true`:
+    if `true`, columns enclosed within double-quote (\") characters are allowed to
+    contain new lines and column delimiters. Double-quote characters within a quoted field must
+    be escaped with another double-quote.
+
 For example, two vectors `x` and `y` of the same length can be written as two columns of
 tab-delimited text to `f` by either `writedlm(f, [x y])` or by `writedlm(f, zip(x, y))`.
 
