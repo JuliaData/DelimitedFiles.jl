@@ -479,15 +479,24 @@ function readdlm_string(sbuff::String, dlm::AbstractChar, T::Type, eol::Abstract
     return readdlm_string(sbuff, dlm, T, eol, auto, optsd)
 end
 
-const valid_opts = [:header, :has_header, :use_mmap, :quotes, :comments, :dims, :comment_char, :skipstart, :skipblanks]
-const valid_opt_types = [Bool, Bool, Bool, Bool, Bool, NTuple{2,Integer}, Char, Integer, Bool]
+const VALID_OPTS_TYPES = Dict{Symbol, Type}(
+    :header => Bool,
+    :has_header => Bool,
+    :use_mmap => Bool,
+    :quotes => Bool,
+    :comments => Bool,
+    :dims => NTuple{2,Integer},
+    :comment_char => Char,
+    :skipstart => Integer,
+    :skipblanks => Bool
+)
 
 function val_opts(opts)
     d = Dict{Symbol, Union{Bool, NTuple{2, Integer}, Char, Integer}}()
     for (opt_name, opt_val) in opts
-        in(opt_name, valid_opts) ||
+        haskey(VALID_OPTS_TYPES, opt_name) ||
             throw(ArgumentError("unknown option $opt_name"))
-        opt_typ = valid_opt_types[findfirst(isequal(opt_name), valid_opts)::Int]
+        opt_typ = VALID_OPTS_TYPES[opt_name]
         isa(opt_val, opt_typ) ||
             throw(ArgumentError("$opt_name should be of type $opt_typ, got $(typeof(opt_val))"))
         d[opt_name] = opt_val
