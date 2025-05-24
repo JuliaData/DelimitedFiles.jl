@@ -188,7 +188,7 @@ If `T` is a numeric type, the result is an array of that type, with any non-nume
 as `NaN` for floating-point types, or zero. Other useful values of `T` include
 `String`, `AbstractString`, and `Any`.
 
-Keyword arguments:
+Keyword options:
 - `header::Bool=false`:
     if `true`, the first row of data will be read as header and the tuple
     `(data_cells, header_cells)` is returned instead of only `data_cells`.
@@ -820,14 +820,14 @@ function writedlm(fname::AbstractString, a, dlm; opts...)
 end
 
 """
-    writedlm(f, A, delim='\\t'; opts)
+    writedlm(f, A, delim='\\t'; options...)
 
 Write `A` (a vector, matrix, or an iterable collection of iterable rows) as text to `f`
 (either a filename string or an `IO` stream) using the given delimiter
 `delim` (which defaults to tab, but can be any printable Julia object, typically a `Char` or
 `AbstractString`).
 
-Keyword arguments:
+Keyword `options`:
 - `quotes::Bool=true`:
     if `true`, columns enclosed within double-quote (\") characters are allowed to
     contain new lines and column delimiters. Double-quote characters within a quoted field must
