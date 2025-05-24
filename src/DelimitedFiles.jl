@@ -171,7 +171,13 @@ readdlm(input, dlm::AbstractChar, eol::AbstractChar; opts...) =
     readdlm_auto(input, dlm, Float64, eol, true; opts...)
 
 """
-    readdlm(source, delim::AbstractChar, T::Type, eol::AbstractChar; header=false, skipstart=0, skipblanks=true, use_mmap, quotes=true, dims, comments=false, comment_char='#')
+    readdlm(
+        source, delim::AbstractChar, T::Type, eol::AbstractChar
+        ; header=false, skipstart=0, skipblanks=true,
+          use_mmap=false, quotes=true,
+          dims::NTuple{2,Integer},
+          comments=false, comment_char='#'
+    )
 
 Read a matrix from the source where each line (separated by `eol`) gives one row, with
 elements separated by the given delimiter. The source can be a text file, stream or byte
@@ -182,24 +188,32 @@ If `T` is a numeric type, the result is an array of that type, with any non-nume
 as `NaN` for floating-point types, or zero. Other useful values of `T` include
 `String`, `AbstractString`, and `Any`.
 
-If `header` is `true`, the first row of data will be read as header and the tuple
-`(data_cells, header_cells)` is returned instead of only `data_cells`.
-
-Specifying `skipstart` will ignore the corresponding number of initial lines from the input.
-
-If `skipblanks` is `true`, blank lines in the input will be ignored.
-
-If `use_mmap` is `true`, the file specified by `source` is memory mapped for potential
-speedups if the file is large. Default is `false`. On a Windows filesystem, `use_mmap` should not be set
-to `true` unless the file is only read once and is also not written to.
-Some edge cases exist where an OS is Unix-like but the filesystem is Windows-like.
-
-If `quotes` is `true`, columns enclosed within double-quote (\") characters are allowed to
-contain new lines and column delimiters. Double-quote characters within a quoted field must
-be escaped with another double-quote.  Specifying `dims` as a tuple of the expected rows and
-columns (including header, if any) may speed up reading of large files.  If `comments` is
-`true`, lines beginning with `comment_char` and text following `comment_char` in any line
-are ignored.
+Keyword arguments:
+- `header::Bool=false`:
+    if `true`, the first row of data will be read as header and the tuple
+    `(data_cells, header_cells)` is returned instead of only `data_cells`.
+- `skipstart::Integer=0`:
+    if `skipstart > 0`, ignore the corresponding number of initial lines from the input.
+- `skipblanks::Bool=true`:
+    if `true`, blank lines in the input will be ignored.
+- `use_mmap::Bool=false`:
+    if `true`, the file specified by `source` is memory mapped for potential
+    speedups if the file is large. 
+    On a Windows filesystem, `use_mmap` should not be set
+    to `true` unless the file is only read once and is also not written to.
+    Some edge cases exist where an OS is Unix-like but the filesystem is Windows-like.
+- `quotes::Bool=true`:
+    if `true`, columns enclosed within double-quote (\") characters are allowed to
+    contain new lines and column delimiters. Double-quote characters within a quoted field must
+    be escaped with another double-quote.
+- `dims::NTuple{2,Integer}`:
+    a tuple of the expected rows and columns (including header, if any) may speed up
+    reading of large files.
+- `comments::Bool=false`:
+    if `true`, lines beginning with `comment_char` and text following `comment_char` in any line
+    are ignored.
+- `comment_char::Char='#'`:
+    the character that marks the beginning of a comment.
 
 # Examples
 ```jldoctest
