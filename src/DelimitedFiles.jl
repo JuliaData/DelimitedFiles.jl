@@ -171,7 +171,13 @@ readdlm(input, dlm::AbstractChar, eol::AbstractChar; opts...) =
     readdlm_auto(input, dlm, Float64, eol, true; opts...)
 
 """
-    readdlm(source, delim::AbstractChar, T::Type, eol::AbstractChar; header=false, skipstart=0, skipblanks=true, use_mmap, quotes=true, dims, comments=false, comment_char='#')
+    readdlm(
+        source, delim::AbstractChar, T::Type, eol::AbstractChar
+        ; header=false, skipstart=0, skipblanks=true,
+          use_mmap=false, quotes=true,
+          dims::NTuple{2,Integer},
+          comments=false, comment_char='#'
+    )
 
 Read a matrix from the source where each line (separated by `eol`) gives one row, with
 elements separated by the given delimiter. The source can be a text file, stream or byte
@@ -182,24 +188,32 @@ If `T` is a numeric type, the result is an array of that type, with any non-nume
 as `NaN` for floating-point types, or zero. Other useful values of `T` include
 `String`, `AbstractString`, and `Any`.
 
-If `header` is `true`, the first row of data will be read as header and the tuple
-`(data_cells, header_cells)` is returned instead of only `data_cells`.
-
-Specifying `skipstart` will ignore the corresponding number of initial lines from the input.
-
-If `skipblanks` is `true`, blank lines in the input will be ignored.
-
-If `use_mmap` is `true`, the file specified by `source` is memory mapped for potential
-speedups if the file is large. Default is `false`. On a Windows filesystem, `use_mmap` should not be set
-to `true` unless the file is only read once and is also not written to.
-Some edge cases exist where an OS is Unix-like but the filesystem is Windows-like.
-
-If `quotes` is `true`, columns enclosed within double-quote (\") characters are allowed to
-contain new lines and column delimiters. Double-quote characters within a quoted field must
-be escaped with another double-quote.  Specifying `dims` as a tuple of the expected rows and
-columns (including header, if any) may speed up reading of large files.  If `comments` is
-`true`, lines beginning with `comment_char` and text following `comment_char` in any line
-are ignored.
+Keyword options:
+- `header::Bool=false`:
+    if `true`, the first row of data will be read as header and the tuple
+    `(data_cells, header_cells)` is returned instead of only `data_cells`.
+- `skipstart::Integer=0`:
+    if `skipstart > 0`, ignore the corresponding number of initial lines from the input.
+- `skipblanks::Bool=true`:
+    if `true`, blank lines in the input will be ignored.
+- `use_mmap::Bool=false`:
+    if `true`, the file specified by `source` is memory mapped for potential
+    speedups if the file is large. 
+    On a Windows filesystem, `use_mmap` should not be set
+    to `true` unless the file is only read once and is also not written to.
+    Some edge cases exist where an OS is Unix-like but the filesystem is Windows-like.
+- `quotes::Bool=true`:
+    if `true`, columns enclosed within double-quote (\") characters are allowed to
+    contain new lines and column delimiters. Double-quote characters within a quoted field must
+    be escaped with another double-quote.
+- `dims::NTuple{2,Integer}`:
+    a tuple of the expected rows and columns (including header, if any) may speed up
+    reading of large files.
+- `comments::Bool=false`:
+    if `true`, lines beginning with `comment_char` and text following `comment_char` in any line
+    are ignored.
+- `comment_char::Char='#'`:
+    the character that marks the beginning of a comment.
 
 # Examples
 ```jldoctest
@@ -479,15 +493,24 @@ function readdlm_string(sbuff::String, dlm::AbstractChar, T::Type, eol::Abstract
     return readdlm_string(sbuff, dlm, T, eol, auto, optsd)
 end
 
-const valid_opts = [:header, :has_header, :use_mmap, :quotes, :comments, :dims, :comment_char, :skipstart, :skipblanks]
-const valid_opt_types = [Bool, Bool, Bool, Bool, Bool, NTuple{2,Integer}, Char, Integer, Bool]
+const VALID_OPTS_TYPES = Dict{Symbol, Type}(
+    :header => Bool,
+    :has_header => Bool,
+    :use_mmap => Bool,
+    :quotes => Bool,
+    :comments => Bool,
+    :dims => NTuple{2,Integer},
+    :comment_char => Char,
+    :skipstart => Integer,
+    :skipblanks => Bool
+)
 
 function val_opts(opts)
     d = Dict{Symbol, Union{Bool, NTuple{2, Integer}, Char, Integer}}()
     for (opt_name, opt_val) in opts
-        in(opt_name, valid_opts) ||
+        haskey(VALID_OPTS_TYPES, opt_name) ||
             throw(ArgumentError("unknown option $opt_name"))
-        opt_typ = valid_opt_types[findfirst(isequal(opt_name), valid_opts)::Int]
+        opt_typ = VALID_OPTS_TYPES[opt_name]
         isa(opt_val, opt_typ) ||
             throw(ArgumentError("$opt_name should be of type $opt_typ, got $(typeof(opt_val))"))
         d[opt_name] = opt_val
@@ -797,12 +820,18 @@ function writedlm(fname::AbstractString, a, dlm; opts...)
 end
 
 """
-    writedlm(f, A, delim='\\t'; opts)
+    writedlm(f, A, delim='\\t'; options...)
 
 Write `A` (a vector, matrix, or an iterable collection of iterable rows) as text to `f`
 (either a filename string or an `IO` stream) using the given delimiter
 `delim` (which defaults to tab, but can be any printable Julia object, typically a `Char` or
 `AbstractString`).
+
+Keyword `options`:
+- `quotes::Bool=true`:
+    if `true`, columns enclosed within double-quote (\") characters are allowed to
+    contain new lines and column delimiters. Double-quote characters within a quoted field must
+    be escaped with another double-quote.
 
 For example, two vectors `x` and `y` of the same length can be written as two columns of
 tab-delimited text to `f` by either `writedlm(f, [x y])` or by `writedlm(f, zip(x, y))`.
