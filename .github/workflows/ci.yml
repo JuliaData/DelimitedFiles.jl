@@ -24,7 +24,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-13 # Intel
+          - macos-15-intel # Intel
           - windows-latest
         arch:
           - 'x64'
@@ -34,7 +34,7 @@ jobs:
           - 'lts'
           - 'nightly'
         exclude:
-          - os: macos-13 # Intel
+          - os: macos-15-intel # Intel
             arch: x86
         include:
           # macos-latest -> Apple Silicon (Need julia >= v1.8)
@@ -45,17 +45,17 @@ jobs:
             arch: 'aarch64'
             version: 'nightly'
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - run: julia --color=yes .ci/test_and_change_uuid.jl
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: lcov.info
@@ -69,11 +69,11 @@ jobs:
       contents: write
       statuses: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
         with:
           version: 'nightly'
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - run: julia --color=yes .ci/test_and_change_uuid.jl
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
