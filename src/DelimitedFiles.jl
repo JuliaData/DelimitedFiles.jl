@@ -764,7 +764,7 @@ end
 writedlm_cell(io::IO, elt, dlm, quotes) = print(io, elt)
 function writedlm(io::IO, a::AbstractMatrix, dlm; opts...)
     optsd = val_opts(opts)
-    quotes = get(optsd, :quotes, true)
+    quotes = get(optsd, :quotes, true)::Bool
     pb = PipeBuffer()
     lastc = last(axes(a, 2))
     for i = axes(a, 1)
@@ -803,7 +803,7 @@ end
 # write an iterable collection of iterable rows
 function writedlm(io::IO, itr, dlm; opts...)
     optsd = val_opts(opts)
-    quotes = get(optsd, :quotes, true)
+    quotes = get(optsd, :quotes, true)::Bool
     pb = PipeBuffer()
     for row in itr
         writedlm_row(pb, row, dlm, quotes)
