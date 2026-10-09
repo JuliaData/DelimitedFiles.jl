@@ -1,5 +1,5 @@
 name = "DelimitedFiles"
-uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+uuid = "9bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
 [deps]
