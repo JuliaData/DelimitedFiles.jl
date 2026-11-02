@@ -128,6 +128,18 @@ end
     @test isequaldlm(readdlm(IOBuffer("1,2,3\n #with leading whitespace\n4,5,6"), ',', comments=true), [1. 2. 3.;" " "" "";4. 5. 6.], Any)
 end
 
+@testset "multiple comment characters" begin
+    s = "#a\n1 2 3\n@b\n4 5 6"
+    for cc in (['#', '@'], ('#', '@'))
+        @test isequaldlm(readdlm(IOBuffer(s), comments=true, comment_char=cc), [1. 2. 3.;4. 5. 6.], Float64)
+    end
+    @test isequaldlm(readdlm(IOBuffer("1,2,@3\n4,5,6"), ',', comments=true, comment_char=['#', '@']), [1. 2. "";4. 5. 6.], Any)
+    @test isequaldlm(readdlm(IOBuffer("1,2,\"@3\"\n4,5,6"), ',', comments=true, comment_char=['#', '@']), [1. 2. "@3";4. 5. 6.], Any)
+    @test isequaldlm(readdlm(IOBuffer(s), comments=true, comment_char=['#']), readdlm(IOBuffer(s), comments=true), Any)
+    @test_throws ArgumentError readdlm(IOBuffer(s), comments=true, comment_char=Char[])
+    @test_throws ArgumentError readdlm(IOBuffer(s), comments=true, comment_char="#@")
+end
+
 @testset "without comments" begin
     @test isequaldlm(readdlm(IOBuffer("1,2,#3\n4,5,6"), ','), [1. 2. "#3";4. 5. 6.], Any)
     @test isequaldlm(readdlm(IOBuffer("1#,2,3\n4,5,6"), ','), ["1#" 2. 3.;4. 5. 6.], Any)
