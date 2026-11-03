@@ -210,10 +210,12 @@ Keyword options:
     a tuple of the expected rows and columns (including header, if any) may speed up
     reading of large files.
 - `comments::Bool=false`:
-    if `true`, lines beginning with `comment_char` and text following `comment_char` in any line
-    are ignored.
-- `comment_char::Char='#'`:
-    the character that marks the beginning of a comment.
+    if `true`, lines beginning with a comment character (see `comment_char`) and text
+    following a comment character in any line are ignored.
+- `comment_char='#'`:
+    the character that marks the beginning of a comment. A collection of characters,
+    given as a `Vector{Char}` or a `Tuple` of `Char`s (e.g. `['#', '@']`), may also be
+    passed, in which case any of those characters marks the beginning of a comment.
 
 # Examples
 ```jldoctest
@@ -457,7 +459,7 @@ function readdlm_string(sbuff::String, dlm::AbstractChar, T::Type, eol::Abstract
     ign_empty = (dlm == invalid_dlm(Char))
     quotes = get(optsd, :quotes, true)
     comments = get(optsd, :comments, false)
-    comment_char = get(optsd, :comment_char, '#')
+    comment_char = _comment_chars(get(optsd, :comment_char, '#'))
     dims = get(optsd, :dims, nothing)
 
     has_header = get(optsd, :header, get(optsd, :has_header, false))
@@ -493,6 +495,18 @@ function readdlm_string(sbuff::String, dlm::AbstractChar, T::Type, eol::Abstract
     return readdlm_string(sbuff, dlm, T, eol, auto, optsd)
 end
 
+const CommentCharType = Union{Char, AbstractVector{Char}, Tuple{Vararg{Char}}}
+
+_comment_chars(c::Char) = c
+function _comment_chars(cs::Union{AbstractVector{Char}, Tuple{Vararg{Char}}})
+    isempty(cs) && throw(ArgumentError("comment_char must contain at least one character"))
+    length(cs) == 1 && return first(cs)
+    return Tuple(cs)
+end
+
+@inline _is_comment_char(c::Char, cchar::Char) = c == cchar
+@inline _is_comment_char(c::Char, cchars::Tuple{Vararg{Char}}) = c in cchars
+
 const VALID_OPTS_TYPES = Dict{Symbol, Type}(
     :header => Bool,
     :has_header => Bool,
@@ -500,13 +514,13 @@ const VALID_OPTS_TYPES = Dict{Symbol, Type}(
     :quotes => Bool,
     :comments => Bool,
     :dims => NTuple{2,Integer},
-    :comment_char => Char,
+    :comment_char => CommentCharType,
     :skipstart => Integer,
     :skipblanks => Bool
 )
 
 function val_opts(opts)
-    d = Dict{Symbol, Union{Bool, NTuple{2, Integer}, Char, Integer}}()
+    d = Dict{Symbol, Union{Bool, NTuple{2, Integer}, CommentCharType, Integer}}()
     for (opt_name, opt_val) in opts
         haskey(VALID_OPTS_TYPES, opt_name) ||
             throw(ArgumentError("unknown option $opt_name"))
@@ -593,9 +607,9 @@ function colval(sbuff::String, startpos::Int, endpos::Int, cells::Array{<:Abstra
 end
 colval(sbuff::String, startpos::Int, endpos::Int, cells::Array, row::Int, col::Int) = true
 
-function dlm_parse(dbuff::String, eol::D, dlm::D, qchar::D, cchar::D,
+function dlm_parse(dbuff::String, eol::D, dlm::D, qchar::D, cchar::C,
                    ign_adj_dlm::Bool, allow_quote::Bool, allow_comments::Bool,
-                   skipstart::Int, skipblanks::Bool, dh::DLMHandler) where D
+                   skipstart::Int, skipblanks::Bool, dh::DLMHandler) where {D, C}
     ncols = nrows = col = 0
     is_default_dlm = (dlm == invalid_dlm(D))
     error_str = ""
@@ -617,7 +631,7 @@ function dlm_parse(dbuff::String, eol::D, dlm::D, qchar::D, cchar::D,
                 is_comment = is_cr = is_quote = false
             elseif (is_quote = (Char(val) == Char(qchar)))
                 is_comment = is_cr = false
-            elseif (is_comment = (Char(val) == Char(cchar)))
+            elseif (is_comment = _is_comment_char(Char(val), cchar))
                 is_cr = false
             else
                 is_cr = (Char(eol) == '\n') && (Char(val) == '\r')
